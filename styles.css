@@ -6,3 +6,119 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.daily-notes-modal {
+	padding: 20px;
+	max-width: 400px;
+}
+
+.daily-notes-modal-header {
+	margin-bottom: 20px;
+}
+
+.daily-notes-modal-header h2 {
+	margin: 0;
+	font-size: 1.5em;
+	color: var(--text-normal);
+}
+
+.daily-notes-modal-content {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.daily-notes-form {
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+}
+
+.daily-notes-input-container {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.daily-notes-label {
+	font-size: 0.9em;
+	color: var(--text-muted);
+}
+
+.daily-notes-date-input {
+	padding: 8px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 1em;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.daily-notes-date-input:hover {
+	border-color: var(--interactive-accent);
+}
+
+.daily-notes-date-input:focus {
+	border-color: var(--interactive-accent);
+	outline: none;
+	box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+.daily-notes-button-container {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+	margin-top: 10px;
+}
+
+.daily-notes-submit,
+.daily-notes-cancel {
+	padding: 8px 16px;
+	border-radius: 4px;
+	font-size: 0.9em;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.daily-notes-submit {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+}
+
+.daily-notes-submit:hover {
+	background-color: var(--interactive-accent-hover);
+}
+
+.daily-notes-cancel {
+	background-color: transparent;
+	color: var(--text-normal);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.daily-notes-cancel:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+/* Dark mode adjustments */
+.theme-dark .daily-notes-date-input {
+	background-color: var(--background-primary-alt);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 500px) {
+	.daily-notes-modal {
+		padding: 15px;
+	}
+	
+	.daily-notes-button-container {
+		flex-direction: column;
+	}
+	
+	.daily-notes-submit,
+	.daily-notes-cancel {
+		width: 100%;
+	}
+}
