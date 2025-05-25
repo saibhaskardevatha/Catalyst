@@ -96,3 +96,136 @@
 .theme-dark .daily-notes-date-input {
 	background-color: var(--background-primary-alt);
 }
+
+/* Move Task Modal Styles */
+.move-task-modal {
+	padding: 20px;
+}
+
+.move-task-modal-header {
+	margin-bottom: 20px;
+}
+
+.move-task-modal-header h2 {
+	margin: 0;
+	font-size: 1.5em;
+	color: var(--text-normal);
+}
+
+.move-task-modal-content {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.move-task-form {
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+}
+
+.move-task-input-container {
+	display: flex;
+	flex-direction: row;
+	gap: 16px;
+	align-items: center;
+}
+
+.move-task-label {
+	font-size: 1em;
+	color: var(--text-muted);
+	min-width: 120px;
+}
+
+.move-task-file-input,
+.move-task-heading-input {
+	padding: 8px 12px;
+	border-radius: 4px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 1em;
+	width: 75%;
+	box-sizing: border-box;
+	cursor: pointer;
+}
+
+.move-task-file-input:hover,
+.move-task-heading-input:hover {
+	border-color: var(--interactive-accent);
+}
+
+.move-task-file-input:focus,
+.move-task-heading-input:focus {
+	border-color: var(--interactive-accent);
+	outline: none;
+}
+
+.move-task-button-container {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+	margin-top: 10px;
+}
+
+.move-task-submit,
+.move-task-cancel {
+	padding: 8px 16px;
+	border-radius: 4px;
+	font-size: 0.9em;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.move-task-submit {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border: none;
+}
+
+.move-task-submit:hover {
+	background-color: var(--interactive-accent-hover);
+}
+
+.move-task-cancel {
+	background-color: transparent;
+	color: var(--text-normal);
+}
+
+.move-task-cancel:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+/* Move Task Icon Styles */
+.HyperMD-task-line {
+	position: relative;
+	padding-left: 25px;
+}
+
+.HyperMD-task-line::before {
+	content: '';
+	position: absolute;
+	left: -12px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 16px;
+	height: 16px;
+	background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>');
+	background-size: contain;
+	background-repeat: no-repeat;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	cursor: pointer;
+	z-index: 2;
+	color: var(--text-muted);
+}
+
+.HyperMD-task-line:hover::before {
+	opacity: 1;
+	color: var(--text-muted);
+}
+
+/* Dark mode adjustments */
+.theme-dark .move-task-file-input,
+.theme-dark .move-task-heading-input {
+	background-color: var(--background-primary-alt);
+}
