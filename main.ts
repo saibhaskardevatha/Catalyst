@@ -1,13 +1,15 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, TFolder } from 'obsidian';
 
 interface CatalystSettings {
 	dateFormat: string;
 	templateFile: string;
+	taskFolder: string;
 }
 
 const DEFAULT_SETTINGS: CatalystSettings = {
 	dateFormat: 'YYYY-MM-DD',
-	templateFile: ''
+	templateFile: '',
+	taskFolder: ''
 }
 
 class DateInputModal extends Modal {
@@ -72,6 +74,177 @@ class DateInputModal extends Modal {
 			e.preventDefault();
 			this.close();
 		});
+	}
+
+	onClose() {
+		const {contentEl} = this;
+		contentEl.empty();
+	}
+}
+
+class MoveTaskModal extends Modal {
+	plugin: Catalyst;
+	taskText: string;
+	onSubmit: (destinationFile: string, heading: string) => void;
+	fileDropdown: HTMLSelectElement;
+	headingDropdown: HTMLSelectElement;
+
+	constructor(app: App, plugin: Catalyst, taskText: string, onSubmit: (destinationFile: string, heading: string) => void) {
+		super(app);
+		this.plugin = plugin;
+		this.taskText = taskText;
+		this.onSubmit = onSubmit;
+	}
+
+	async getHeadingsFromFile(filePath: string): Promise<string[]> {
+		const file = this.app.vault.getAbstractFileByPath(filePath);
+		if (!(file instanceof TFile)) return [];
+		
+		const content = await this.app.vault.read(file);
+		const headingRegex = /^#+\s+(.+)$/gm;
+		const headings: string[] = [];
+		let match;
+		
+		while ((match = headingRegex.exec(content)) !== null) {
+			headings.push(match[1]);
+		}
+		
+		return headings;
+	}
+
+	async updateHeadingDropdown(filePath: string) {
+		const headings = await this.getHeadingsFromFile(filePath);
+		
+		// Clear existing options
+		while (this.headingDropdown.firstChild) {
+			this.headingDropdown.removeChild(this.headingDropdown.firstChild);
+		}
+		
+		if (headings.length === 0) {
+			const option = document.createElement('option');
+			option.value = '';
+			option.text = 'No headings found';
+			this.headingDropdown.appendChild(option);
+			this.headingDropdown.disabled = true;
+		} else {
+			this.headingDropdown.disabled = false;
+			headings.forEach(heading => {
+				const option = document.createElement('option');
+				option.value = heading;
+				option.text = heading;
+				this.headingDropdown.appendChild(option);
+			});
+		}
+	}
+
+	onOpen() {
+		const {contentEl} = this;
+		contentEl.empty();
+		contentEl.addClass('move-task-modal');
+
+		// Add CSS for dropdowns
+		const style = document.createElement('style');
+		style.textContent = `
+			.move-task-file-input,
+			.move-task-heading-input {
+				height: 30px;
+				min-height: 30px;
+				padding: 4px 8px;
+				width: 100%;
+				margin-top: 4px;
+			}
+			.move-task-input-container {
+				margin-bottom: 16px;
+			}
+		`;
+		contentEl.appendChild(style);
+
+		// Create header
+		const header = contentEl.createEl('div', {cls: 'move-task-modal-header'});
+		header.createEl('h2', {text: 'Move Task'});
+
+		// Create form container
+		const formContainer = contentEl.createEl('div', {cls: 'move-task-modal-content'});
+		
+		// Create form
+		const form = formContainer.createEl('form', {cls: 'move-task-form'});
+		
+		// Create file input container
+		const fileInputContainer = form.createEl('div', {cls: 'move-task-input-container'});
+		fileInputContainer.createEl('label', {
+			text: 'Destination File:',
+			cls: 'move-task-label'
+		});
+		
+		// Create file dropdown
+		this.fileDropdown = fileInputContainer.createEl('select', {
+			cls: 'move-task-file-input'
+		});
+
+		// Get all markdown files in the task folder
+
+		const allFiles = this.app.vault.getMarkdownFiles();
+		const files = allFiles.filter(file => {
+			const matches = file.path.startsWith(this.plugin.settings.taskFolder);
+			return matches;
+		});
+		
+		// Add files to dropdown
+		files.forEach(file => {
+			const option = document.createElement('option');
+			option.value = file.path;
+			option.text = file.path;
+			this.fileDropdown.appendChild(option);
+		});
+
+		// Create heading input container
+		const headingInputContainer = form.createEl('div', {cls: 'move-task-input-container'});
+		headingInputContainer.createEl('label', {
+			text: 'Heading:',
+			cls: 'move-task-label'
+		});
+		
+		// Create heading dropdown
+		this.headingDropdown = headingInputContainer.createEl('select', {
+			cls: 'move-task-heading-input'
+		});
+
+		// Update heading dropdown when file is selected
+		this.fileDropdown.addEventListener('change', async () => {
+			await this.updateHeadingDropdown(this.fileDropdown.value);
+		});
+
+		// Create button container
+		const buttonContainer = formContainer.createEl('div', {cls: 'move-task-button-container'});
+		
+		const submitButton = buttonContainer.createEl('button', {
+			text: 'Move Task',
+			cls: 'mod-cta move-task-submit'
+		});
+		
+		const cancelButton = buttonContainer.createEl('button', {
+			text: 'Cancel',
+			cls: 'move-task-cancel'
+		});
+
+		submitButton.addEventListener('click', (e) => {
+			e.preventDefault();
+			this.onSubmit(this.fileDropdown.value, this.headingDropdown.value);
+			this.close();
+		});
+
+		cancelButton.addEventListener('click', (e) => {
+			e.preventDefault();
+			this.close();
+		});
+
+		// Initialize heading dropdown for first file
+		if (files.length > 0) {
+			console.log('Initializing with first file:', files[0].path);
+			this.updateHeadingDropdown(files[0].path);
+		} else {
+			console.log('No files found to initialize with');
+		}
 	}
 
 	onClose() {
@@ -182,14 +355,91 @@ export default class Catalyst extends Plugin {
 			}
 		});
 
+		// Add click listener to detect clicks on task items
+		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
+			const target = evt.target as HTMLElement;
+			const taskItem = target.closest('.HyperMD-task-line');
+			if (taskItem) {
+				// Calculate if the click was in the area of the ::before pseudo-element
+				const rect = taskItem.getBoundingClientRect();
+				const iconAreaLeft = rect.left - 20; // Approximate left position based on CSS
+				const iconAreaRight = rect.left;   // Approximate right position
+				const clickX = evt.clientX;
+
+				// Check if the click was within the horizontal bounds of the icon area
+				if (clickX >= iconAreaLeft && clickX <= iconAreaRight) {
+					evt.stopPropagation(); // Stop event propagation
+
+					// Get the markdown content of the task
+					const taskText = taskItem.textContent || '';
+					
+					// Trigger the modal
+					new MoveTaskModal(this.app, this, taskText, async (destinationFile, heading) => {
+						try {
+							// Get the destination file
+							const destFile = this.app.vault.getAbstractFileByPath(destinationFile);
+							if (!(destFile instanceof TFile)) {
+								new Notice('Destination file not found');
+								return;
+							}
+
+							// Read the destination file content
+							const content = await this.app.vault.read(destFile);
+							
+							// Find the heading position
+							const headingRegex = new RegExp(`^#+\\s+${heading}$`, 'm');
+							const headingMatch = content.match(headingRegex);
+							
+							if (!headingMatch) {
+								new Notice('Heading not found in destination file');
+								return;
+							}
+
+							// Insert the task after the heading
+							if (headingMatch.index === undefined) {
+								new Notice('Invalid heading position');
+								return;
+							}
+							const headingPos = headingMatch.index + headingMatch[0].length;
+							const newContent = content.slice(0, headingPos + 1) + '- [ ]' + taskText + '\n' + content.slice(headingPos + 1);
+							
+							// Update the destination file
+							await this.app.vault.modify(destFile, newContent);
+							
+							// Remove the task from the current file
+							const currentFile = this.app.workspace.getActiveFile();
+							if (currentFile) {
+								const editor = this.app.workspace.activeEditor?.editor;
+								if (editor) {
+									// Get the current line number
+									const lineNumber = editor.getCursor().line;
+									// Get the line content
+									const line = editor.getLine(lineNumber);
+									// If this is the task line, remove it
+									if (line.includes(taskText)) {
+										editor.replaceRange('', {line: lineNumber, ch: 0}, {line: lineNumber + 1, ch: 0});
+									}
+								} else {
+									// Fallback to file modification if editor is not available
+									const currentContent = await this.app.vault.read(currentFile);
+									const lines = currentContent.split('\n');
+									const updatedLines = lines.filter(line => !line.includes(taskText));
+									await this.app.vault.modify(currentFile, updatedLines.join('\n'));
+								}
+							}
+
+							new Notice('Task moved successfully');
+						} catch (error) {
+							new Notice('Failed to move task');
+							console.error(error);
+						}
+					}).open();
+				}
+			}
+		});
+
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new CatalystSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
@@ -265,6 +515,34 @@ class CatalystSettingTab extends PluginSettingTab {
 				// Handle change
 				dropdown.onChange(async (value) => {
 					this.plugin.settings.templateFile = value;
+					await this.plugin.saveSettings();
+				});
+			});
+
+		new Setting(containerEl)
+			.setName('Task Folder')
+			.setDesc('Select a folder for task notes.')
+			.addDropdown(dropdown => {
+				// Get all folders
+				const folders = this.app.vault.getAllLoadedFiles()
+					.filter(file => file instanceof TFolder)
+					.map(folder => folder as TFolder);
+				
+				// Add empty option
+				dropdown.addOption('', 'No folder');
+				
+				// Add all folders
+				folders.forEach(folder => {
+					dropdown.addOption(folder.path, folder.path);
+				});
+				
+				// Set current value
+				dropdown.setValue(this.plugin.settings.taskFolder);
+				
+				// Handle change
+				dropdown.onChange(async (value) => {
+					console.log('Task folder setting changed to:', value);
+					this.plugin.settings.taskFolder = value;
 					await this.plugin.saveSettings();
 				});
 			});
