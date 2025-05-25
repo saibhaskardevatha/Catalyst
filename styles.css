@@ -1,15 +1,5 @@
-/*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
-
 .daily-notes-modal {
 	padding: 20px;
-	max-width: 400px;
 }
 
 .daily-notes-modal-header {
@@ -36,12 +26,13 @@ If your plugin does not need CSS, delete this file.
 
 .daily-notes-input-container {
 	display: flex;
-	flex-direction: column;
-	gap: 8px;
+	flex-direction: row;
+	gap: 16px;
+	align-items: center;
 }
 
 .daily-notes-label {
-	font-size: 0.9em;
+	font-size: 1em;
 	color: var(--text-muted);
 }
 
@@ -52,7 +43,7 @@ If your plugin does not need CSS, delete this file.
 	background-color: var(--background-primary);
 	color: var(--text-normal);
 	font-size: 1em;
-	width: 100%;
+	width: 75%;
 	box-sizing: border-box;
 }
 
@@ -95,7 +86,6 @@ If your plugin does not need CSS, delete this file.
 .daily-notes-cancel {
 	background-color: transparent;
 	color: var(--text-normal);
-	border: 1px solid var(--background-modifier-border);
 }
 
 .daily-notes-cancel:hover {
@@ -105,20 +95,4 @@ If your plugin does not need CSS, delete this file.
 /* Dark mode adjustments */
 .theme-dark .daily-notes-date-input {
 	background-color: var(--background-primary-alt);
-}
-
-/* Mobile responsiveness */
-@media (max-width: 500px) {
-	.daily-notes-modal {
-		padding: 15px;
-	}
-	
-	.daily-notes-button-container {
-		flex-direction: column;
-	}
-	
-	.daily-notes-submit,
-	.daily-notes-cancel {
-		width: 100%;
-	}
 }

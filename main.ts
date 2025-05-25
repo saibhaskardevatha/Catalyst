@@ -1,7 +1,5 @@
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
-
 interface CatalystSettings {
 	dateFormat: string;
 	templateFile: string;
