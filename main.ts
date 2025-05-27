@@ -184,10 +184,22 @@ class MoveTaskModal extends Modal {
 		// Get all markdown files in the task folder
 
 		const allFiles = this.app.vault.getMarkdownFiles();
-		const files = allFiles.filter(file => {
-			const matches = file.path.startsWith(this.plugin.settings.taskFolder);
-			return matches;
-		});
+		// const files = allFiles.filter(file => {
+		// 	const matches = file.path.startsWith(this.plugin.settings.taskFolder);
+		// 	return matches;
+		// });
+
+		const files = allFiles
+			.filter(file => {
+				const taskFolderPath = this.plugin.settings.taskFolder;
+				// Only include files directly in the task folder, not in subfolders
+				const isInTaskFolder = file.path.startsWith(taskFolderPath);
+				const remainingPath = file.path.slice(taskFolderPath.length);
+				const hasNoSubfolder = !remainingPath.includes('/') || remainingPath.startsWith('/') && !remainingPath.slice(1).includes('/');
+				
+				return isInTaskFolder && hasNoSubfolder;
+			})
+			.sort((a, b) => a.path.localeCompare(b.path));
 		
 		// Add files to dropdown
 		files.forEach(file => {
